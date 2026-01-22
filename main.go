@@ -87,8 +87,8 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// lookup product by ID with linear search, then update the found product's data
-	for i := range categories {
-		if categories[i].ID == id {
+	for i := range products {
+		if products[i].ID == id {
 			updateProduct.ID = id
 			products[i] = updateProduct
 
