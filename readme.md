@@ -12,7 +12,9 @@ curl -X POST http://localhost:8080/api/products ^
 
 curl http://localhost:8080/api/products
 
-curl -X PUT http://localhost:8080/api/products/2 ^
+curl http://localhost:8080/api/products/1
+
+curl -X PUT http://localhost:8080/api/products/1 ^
 -H "Content-Type: application/json" ^
 -d "{ \"name\": \"Flowers\", \"price\": 42000, \"stock\": 41 }"
 
@@ -22,16 +24,18 @@ curl -X DELETE http://localhost:8080/api/products/1
 
 curl http://localhost:8080/health
 
-curl http://localhost:8080/categories
-
-curl -X POST http://localhost:8080/categories ^
+curl -X POST http://localhost:8080/api/categories ^
 -H "Content-Type: application/json" ^
 -d "{ \"name\": \"Sports\", \"description\": \"Sport goods\" }"
 
-curl http://localhost:8080/categories
+curl http://localhost:8080/api/categories
 
-curl -X PUT http://localhost:8080/categories/2 ^
+curl http://localhost:8080/api/categories/1
+
+curl http://localhost:8080/api/categories
+
+curl -X PUT http://localhost:8080/api/categories/1 ^
 -H "Content-Type: application/json" ^
 -d "{ \"name\": \"Toys\", \"description\": \"Toys for kids\" }"
 
-curl -X DELETE http://localhost:8080/categories/1
+curl -X DELETE http://localhost:8080/api/categories/1
