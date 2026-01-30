@@ -1,8 +1,10 @@
 package services
 
 import (
+	"errors"
 	"kasir-api/models"
 	"kasir-api/repositories"
+	"strings"
 )
 
 type ProductService struct {
@@ -14,7 +16,12 @@ func NewProductService(repo *repositories.ProductRepository) *ProductService {
 }
 
 func (s *ProductService) Create(data *models.Product) error {
-	return s.repo.Create(data)
+	err := s.repo.Create(data)
+	if err != nil && strings.Contains(err.Error(), "violates foreign key constraint") {
+		return errors.New("invalid category_id: category not found")
+	}
+
+	return err
 }
 
 func (s *ProductService) GetAll() ([]models.Product, error) {
