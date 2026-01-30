@@ -42,10 +42,16 @@ func (repo *ProductRepository) GetAll() ([]models.Product, error) {
 }
 
 func (repo *ProductRepository) GetByID(id int) (*models.Product, error) {
-	query := "SELECT id, name, price, stock FROM products WHERE id = $1"
+	query := `SELECT 
+	products.id, products.name, products.price, products.stock,
+	COALESCE(categories.name, 'N/A') as category_name 
+	FROM products 
+	LEFT JOIN categories 
+	ON products.category_id = categories.id
+	WHERE products.id = $1`
 
 	var p models.Product
-	err := repo.db.QueryRow(query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock)
+	err := repo.db.QueryRow(query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryName)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("product not found")
 	}
