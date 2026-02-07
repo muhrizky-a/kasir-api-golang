@@ -11,6 +11,7 @@ curl -X POST http://localhost:8080/api/products ^
 -d "{ \"name\": \"Rice\", \"price\": 5000, \"stock\": 42, \"category_id\": 42 }"
 
 curl http://localhost:8080/api/products
+curl http://localhost:8080/api/products?name=ice
 
 curl http://localhost:8080/api/products/1
 
