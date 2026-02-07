@@ -8,6 +8,18 @@ curl http://localhost:8080/api/products
 
 curl -X POST http://localhost:8080/api/products ^
 -H "Content-Type: application/json" ^
+-d "{ \"name\": \"Rice\", \"price\": 5000, \"stock\": 42 }"
+
+curl -X POST http://localhost:8080/api/products ^
+-H "Content-Type: application/json" ^
+-d "{ \"name\": \"Noodles\", \"price\": 3300, \"stock\": 42 }"
+
+curl -X POST http://localhost:8080/api/products ^
+-H "Content-Type: application/json" ^
+-d "{ \"name\": \"Toy\", \"price\": 50000, \"stock\": 10 }"
+
+curl -X POST http://localhost:8080/api/products ^
+-H "Content-Type: application/json" ^
 -d "{ \"name\": \"Rice\", \"price\": 5000, \"stock\": 42, \"category_id\": 42 }"
 
 curl http://localhost:8080/api/products
@@ -40,3 +52,17 @@ curl -X PUT http://localhost:8080/api/categories/1 ^
 -d "{ \"name\": \"Toys\", \"description\": \"Toys for kids\" }"
 
 curl -X DELETE http://localhost:8080/api/categories/1
+
+curl -X POST http://localhost:8080/api/products ^
+-H "Content-Type: application/json" ^
+-d "{ \"name\": \"Rice\", \"price\": 5000, \"stock\": 42 }"
+
+curl -X POST http://localhost:8080/api/checkout ^
+-H "Content-Type: application/json" ^
+-d "{\"items\": [{ \"product_id\": 26, \"quantity\": 4}, { \"product_id\": 27, \"quantity\": 40}]}"
+
+curl -X POST http://localhost:8080/api/checkout ^
+-H "Content-Type: application/json" ^
+-d "{\"items\": [{ \"product_id\": 26, \"quantity\": 4}]}"
+
+curl http://localhost:8080/api/report/hari-ini

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"kasir-api/models"
+	"strings"
+	"time"
 )
 
 type TransactionRepository struct {
@@ -28,13 +30,16 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		var productPrice, stock int
 		var productName string
 
-		err := tx.QueryRow("SELECT name, price, stock FROM products WHERE id = $1", item.ProductID).
-			Scan(&productName, &productPrice, &stock)
+		err := tx.QueryRow("SELECT name, price, stock FROM products WHERE id = $1", item.ProductID).Scan(&productName, &productPrice, &stock)
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("product id %d not found", item.ProductID)
 		}
 		if err != nil {
 			return nil, err
+		}
+
+		if item.Quantity > stock {
+			return nil, fmt.Errorf("insufficient product id %d stock", item.ProductID)
 		}
 
 		subtotal := productPrice * item.Quantity
@@ -59,13 +64,37 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		return nil, err
 	}
 
-	for i := range details {
+	var (
+		placeholders []string
+		args         []interface{}
+	)
+	for i, _ := range details {
 		details[i].TransactionID = transactionID
-		_, err = tx.Exec("INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES ($1, $2, $3, $4)",
-			transactionID, details[i].ProductID, details[i].Quantity, details[i].Subtotal)
-		if err != nil {
-			return nil, err
-		}
+		placeholders = append(
+			placeholders,
+			fmt.Sprintf("($%d,$%d,$%d,$%d)",
+				i*4+1,
+				i*4+2,
+				i*4+3,
+				i*4+4,
+			))
+
+		args = append(args,
+			transactionID,
+			details[i].ProductID,
+			details[i].Quantity,
+			details[i].Subtotal)
+	}
+	query := fmt.Sprintf(
+		"INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES %s",
+		strings.Join(placeholders, ","),
+	)
+
+	_, err = tx.Exec(
+		query, args...,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -77,4 +106,53 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		TotalAmount: totalAmount,
 		Details:     details,
 	}, nil
+}
+
+func (repo *TransactionRepository) GetTodayReport() (*models.Report, error) {
+	var report models.Report
+	var produk models.ProdukTerlaris
+
+	t := time.Now()
+	dateStr := t.Format("2006-01-02")
+
+	query := `
+	SELECT 
+		COALESCE(sum(transactions.total_amount), 0) as total_revenue,
+		COUNT(transactions.id) as total_transaksi
+		FROM transactions 
+		WHERE transactions.created_at >= $1::date
+  		AND transactions.created_at < ($1::date + INTERVAL '1 day')
+  `
+
+	err := repo.db.QueryRow(query, dateStr).Scan(&report.TotalRevenue, &report.TotalTransaksi)
+	if err != nil {
+		return nil, err
+	}
+	if report.TotalRevenue < 1 || report.TotalTransaksi < 1 {
+		return &report, nil
+	}
+
+	query = `
+	SELECT
+		products.name as nama,
+		SUM(transaction_details.quantity) as qty_terjual
+		FROM transactions 
+		JOIN transaction_details
+		ON transactions.id = transaction_details.transaction_id
+		JOIN products
+		ON products.id = transaction_details.product_id
+		WHERE transactions.created_at >= $1::date
+		AND transactions.created_at <  ($1::date + INTERVAL '1 day')
+		GROUP by nama
+		ORDER by qty_terjual DESC
+		LIMIT 1
+  `
+
+	err = repo.db.QueryRow(query, dateStr).Scan(&produk.Nama, &produk.QtyTerjual)
+	if err != nil {
+		return nil, err
+	}
+
+	report.ProdukTerlaris = produk
+	return &report, nil
 }
