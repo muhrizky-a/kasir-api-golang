@@ -48,6 +48,11 @@ func main() {
 	productService := services.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
 
+	// Transaction
+	transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
 	// Setup routes
 	http.HandleFunc(
 		"/health",
@@ -63,6 +68,7 @@ func main() {
 	http.HandleFunc("/api/products/", productHandler.HandleProductByID)
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout)
 
 	addr := "0.0.0.0:" + config.Port
 	fmt.Println("Server running di", addr)
